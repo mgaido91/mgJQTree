@@ -3,7 +3,7 @@
  Created by Marco Gaido on 25/08/2014.
  Copyright (c) 2014 Marco Gaido. All rights reserved.
  
- This software is released under GNU GPLv3 license.
+ This software is released under GNU GPLv2 license.
 */
 class NodeNotFoundException extends Exception{}
 
