@@ -100,7 +100,7 @@
 	
 			var oldParent=ui.draggable.parent().parent();
 		
-			ui.draggable.context.parentElement.remove();
+			ui.draggable.context.parentElement.parentElement.removeChild(ui.draggable.context.parentElement);
 			$(this).next("ul").append(ui.draggable.context.parentElement);
 			
 			
