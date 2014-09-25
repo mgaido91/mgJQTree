@@ -175,7 +175,7 @@
 		if(this.next("ul").length==0){
 			this.after("<ul></ul>");
 		}
-		var newli=$("<li><a class='"+(child.type=="leaf"?"treeLeaf":"treeNode")+"' id='"+child.id+"'>"+child.label+"</a></li>");
+		var newli=$("<li><a class='"+(child.isLeaf?"treeLeaf":"treeNode")+"' id='"+child.id+"'>"+child.label+"</a></li>");
 		if(newItem.hasOwnProperty("infos")){
 			$($(newli).children()[0]).data("infos", newItem.infos);
 		}
