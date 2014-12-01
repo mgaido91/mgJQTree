@@ -74,11 +74,11 @@ class mg_Tree{
 	
 	public function getRootNode(){return $this->rootNode;}
 	
-	public function generateTree(){
+	public function generateTree($enableDragAndDrop=true){
 		?>
-		<script type="text/javascript"">
+		<script type="text/javascript">
 			document.write("<div id=\"<?php echo $this->id;?>\" class=\"tree\"><\/div>");
-			jQuery(document).ready($("#<?php echo $this->id;?>").mg_GenerateTree(<?php echo $this->serializeToJSON();?>));
+			jQuery(document).ready($("#<?php echo $this->id;?>").mg_GenerateTree(<?php echo $this->serializeToJSON();?><?php if(!$enableDragAndDrop){ ?>, { "enableDragAndDrop":false} <?php }?>));
 		</script>
 		<?php
 	}
@@ -92,6 +92,11 @@ class mg_Tree{
 			$root->setProperty($name, $value);
 			
 		}
+		foreach($rootNode->classes as $class){
+			
+			$root->addClass($class);
+			
+		}
 		
 		$tree=new mg_Tree($root);
 		self::recursTreeLoading($tree, $root, $rootNode);
@@ -103,6 +108,9 @@ class mg_Tree{
 			$childNode=new mg_Node($child->label, $child->id, $child->type=="leaf");
 			foreach($child->infos as $name => $value){
 				$childNode->setProperty($name, $value);
+			}
+			foreach($child->classes as $class){	
+				$childNode->addClass($class);
 			}
 			$tree->addNewChild($node, $childNode);
 			self::recursTreeLoading($tree, $childNode, $child);
@@ -122,6 +130,7 @@ class mg_Node{
 	private $isLeaf;
 	private $children;
 	private $properties;
+	private $classes;
 	
 	public function __construct($label, $id="", $isLeaf=false){
 		
@@ -130,7 +139,7 @@ class mg_Node{
 		$this->isLeaf=$isLeaf;
 		$this->children=array();
 		$this->properties=array();
-		
+		$this->classes=array();
 	}
 	
 	public function addChild($child){
@@ -138,17 +147,25 @@ class mg_Node{
 	}
 	
 	public function serializeToJSON(){
-		$string="{label:\"".$this->label."\", id:\"".$this->id."\", type:\"".(($this->isLeaf)?"leaf":"node")."\"";
+		$string="{\"label\":\"".$this->label."\", \"id\":\"".$this->id."\", \"type\":\"".(($this->isLeaf)?"leaf":"node")."\"";
 		if(count($this->properties)>0){
-			$string.=", infos:{";
+			$string.=", \"infos\":{";
 			foreach($this->properties as $name => $value){
 				$string.="\"$name\":\"$value\", ";
 			}
 			$string=substr($string, 0, -2);
 			$string.="}";
 		}
+		if(count($this->classes)>0){
+			$string.=", \"classes\":[";
+			foreach($this->classes as $class){
+				$string.="\"$class\", ";
+			}
+			$string=substr($string, 0, -2);
+			$string.="]";
+		}
 		if(count($this->children)>0){
-			$string.=", children:[";
+			$string.=", \"children\":[";
 			foreach($this->children as $child){
 				$string.=$child->serializeToJSON().", ";
 			}
@@ -160,6 +177,10 @@ class mg_Node{
 	}
 	public function setProperty($name, $value){
 		$this->properties[$name]=$value;
+	}
+	
+	public function addClass($className){
+		$this->classes[]=$className;
 	}
 	
 	public function getChildren(){return $this->children;}
