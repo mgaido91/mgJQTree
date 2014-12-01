@@ -23,6 +23,7 @@
  							
  	-	mg_getInfos(): it returns an object containing the informations of the selected node.
  		
+ 	- 	mg_removeFromTree(): it removes the element from the tree
 */
 
 (function($){
@@ -39,6 +40,11 @@
 				newli=$("<li><a class='"+(item.type=="leaf"?"treeLeaf":"treeNode")+"' id='"+item.id+"'>"+item.label+"</a></li>");
 				if(item.hasOwnProperty("infos")){
 					$($(newli).children()[0]).data("infos", item.infos);
+				}
+				if(item.hasOwnProperty("classes")){
+					for(var i=0; i<item.classes.length;++i){
+						$($(newli).children()[0]).addClass(item.classes[i]);
+					}
 				}
 				liItem.children().last().append(newli);
 				mg_TreeRecursiveCreation(item,newli);
@@ -71,6 +77,12 @@
 		
 			if($(childNode).data("infos")){
 				newChild.infos=$(childNode).data("infos");
+			}
+			var classes = childNode.className.split(/\s+/);
+			for (var i = 0; i < classes.length; i++) {
+				if(i==0) newChild.classes=new Array();
+				if(classes[i]!="treeNode" && classes[i]!="treeLeaf" && classes[i].indexOf("ui-")!=0)
+					newChild.classes.push(classes[i]);
 			}
 			obj.children.push(newChild);
 			mg_recursiveTreeObj(newChild, childNode);
@@ -126,7 +138,10 @@
 		}
 	}
 	
-	
+	var defaultSettings = {
+	        // These are the defaults.
+			enableDragAndDrop: true
+	};
 
 
 	// --- tree generator function ---
@@ -135,7 +150,8 @@
 		$.each(this.children(), function(index, item){
 										item.remove();
 									});
-									
+		this[0].mg_JQTree_settings = $.extend(defaultSettings, options );
+					
 		var list=$("<ul></ul>");
 		this.append(list);
 		
@@ -143,16 +159,21 @@
 		if(JsonStruct.hasOwnProperty("infos")){
 			$($(newli).children()[0]).data("infos", JsonStruct.infos);
 		}
+		if(JsonStruct.hasOwnProperty("classes")){
+			for(var i=0; i<JsonStruct.classes.length;++i){
+				$($(newli).children()[0]).addClass(JsonStruct.classes[i]);
+			}
+		}
 		
 		list.append(newli);
 		
 		mg_TreeRecursiveCreation(JsonStruct, newli);
 		
-		
-		$(".treeNode").draggable({stack: ".treeNode, .treeLeaf",revert:true,snapTolerance:30});
-		$(".treeLeaf").draggable({stack: ".treeNode, .treeLeaf",revert:true,snapTolerance:30});
-		$(".treeNode").droppable({drop:mg_handleDropEvent});
-		
+		if(this[0].mg_JQTree_settings.enableDragAndDrop){
+			$(".treeNode").draggable({stack: ".treeNode, .treeLeaf",revert:true,snapTolerance:30});
+			$(".treeLeaf").draggable({stack: ".treeNode, .treeLeaf",revert:true,snapTolerance:30});
+			$(".treeNode").droppable({drop:mg_handleDropEvent});
+		}
 		//backup=this.innerHTML;//toBeChanged
 		
 	};
@@ -167,7 +188,7 @@
 	//---add a node to the current tree node
 	$.fn.mg_addNode=function(newItem){
 		if(!$(this).hasClass("treeNode")){
-			throw new Exception("A new node can be added only to a treeNode object (i.e. an element of treeNode class).");
+			throw {message:"A new node can be added only to a treeNode object (i.e. an element of treeNode class)."};
 		}
 		
 		var child=$.extend({label:"", id:"",isLeaf:false}, newItem);
@@ -175,22 +196,31 @@
 		if(this.next("ul").length==0){
 			this.after("<ul></ul>");
 		}
+		
+		
 		var newli=$("<li><a class='"+(child.isLeaf?"treeLeaf":"treeNode")+"' id='"+child.id+"'>"+child.label+"</a></li>");
 		if(newItem.hasOwnProperty("infos")){
 			$($(newli).children()[0]).data("infos", newItem.infos);
 		}
+		if(newItem.hasOwnProperty("classes")){
+			for(var i=0; i<newItem.classes.length;++i){
+				$($(newli).children()[0]).addClass(newItem.classes[i]);
+			}
+		}
 		this.next("ul").append(newli);
 		
-		$(".treeNode").draggable({stack: ".treeNode, .treeLeaf",revert:true,snapTolerance:30});
-		$(".treeLeaf").draggable({stack: ".treeNode, .treeLeaf",revert:true,snapTolerance:30});
-		$(".treeNode").droppable({drop:mg_handleDropEvent});
+		if(this.parents(".tree")[0].mg_JQTree_settings.enableDragAndDrop){
+			$(".treeNode").draggable({stack: ".treeNode, .treeLeaf",revert:true,snapTolerance:30});
+			$(".treeLeaf").draggable({stack: ".treeNode, .treeLeaf",revert:true,snapTolerance:30});
+			$(".treeNode").droppable({drop:mg_handleDropEvent});
+		}
 	}
 	
 	
 	//---get object from the tree
 	$.fn.mg_getTreeObject=function(){
 		if(!$(this).hasClass("tree")){
-			throw new Exception("JSON can be extracted only from a tree object (i.e. an element of tree class).");
+			throw {message:"JSON can be extracted only from a tree object (i.e. an element of tree class)."};
 		}
 		var obj={};
 		
@@ -208,7 +238,12 @@
 		if($(rootNode).data("infos")){
 			obj.infos=$(rootNode).data("infos");
 		}
-		
+		var classes = rootNode.className.split(/\s+/);
+		for (var i = 0; i < classes.length; i++) {
+			if(i==0) obj.classes=new Array();
+			if(classes[i]!="treeNode" && classes[i]!="treeLeaf"  && classes[i].indexOf("ui-")!=0)
+				obj.classes.push(classes[i]);
+		}
 		mg_recursiveTreeObj(obj, rootNode);
 		return obj;
 	}
@@ -221,10 +256,10 @@
 	
 	$.fn.mg_addInfos=function(infoObj){
 		if(!$(this).hasClass("treeNode") && !$(this).hasClass("treeLeaf")){
-			throw new Exception("Infos can be added only to a treeNode or treeLeaf object (i.e. an element of treeNode or treeLeaf class).");
+			throw {message:"Infos can be added only to a treeNode or treeLeaf object (i.e. an element of treeNode or treeLeaf class)."};
 		}
 		if(infoObj === null || typeof infoObj !== 'object'){
-			throw new Exception("The infoObj parameter must be an object.");
+			throw {message:"The infoObj parameter must be an object."};
 		}
 		$(this).data("infos",$.extend($(this).data("infos"), infoObj));
 	
@@ -232,11 +267,24 @@
 	
 	$.fn.mg_getInfos=function(){
 		if(!$(this).hasClass("treeNode") && !$(this).hasClass("treeLeaf")){
-			throw new Exception("Infos can be retrieved only from a treeNode or treeLeaf object (i.e. an element of treeNode or treeLeaf class).");
+			throw {message:"Infos can be retrieved only from a treeNode or treeLeaf object (i.e. an element of treeNode or treeLeaf class)."};
 		}
 		
 		return $(this).data("infos");
 	
+	}
+	
+	$.fn.mg_removeFromTree=function(){
+		if(!$(this).hasClass("treeNode") && !$(this).hasClass("treeLeaf")){
+			throw {message:"Only a treeNode or treeLeaf object can be removed from the tree."};
+		}
+		var oldParent=this.parent();
+		console.log(oldParent);
+		oldParent[0].removeChild(this[0]);
+
+		if($(oldParent[0]).children().length==0){
+			$(oldParent[0]).remove();
+		}
 	}
 	
 }(jQuery));
