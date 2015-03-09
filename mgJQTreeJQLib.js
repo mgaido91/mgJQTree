@@ -279,11 +279,15 @@
 			throw {message:"Only a treeNode or treeLeaf object can be removed from the tree."};
 		}
 		var oldParent=this.parent();
-		console.log(oldParent);
+		
 		oldParent[0].removeChild(this[0]);
+		var ulParent = $(oldParent[0]).parent();
 
 		if($(oldParent[0]).children().length==0){
 			$(oldParent[0]).remove();
+		}
+		if($(ulParent[0]).children().length==0){
+			$(ulParent[0]).remove();
 		}
 	}
 	
