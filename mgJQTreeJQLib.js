@@ -22,6 +22,8 @@
  							in the informations of the node, they will be overwritten.
  							
  	-	mg_getInfos(): it returns an object containing the informations of the selected node.
+ 	
+ 	-	mg_getParent(): it returns the parent node of the selected node in the tree.
  		
  	- 	mg_removeFromTree(): it removes the element from the tree
 */
@@ -267,10 +269,17 @@
 	
 	$.fn.mg_getInfos=function(){
 		if(!$(this).hasClass("treeNode") && !$(this).hasClass("treeLeaf")){
-			throw {message:"Infos can be retrieved only from a treeNode or treeLeaf object (i.e. an element of treeNode or treeLeaf class)."};
-		}
+			throw {message:"Infos can be retrieved only from a treeNode or treeLeaf object (i.e. an element of treeNode or treeLeaf class)."};		}
 		
 		return $(this).data("infos");
+	
+	}
+	
+	$.fn.mg_getParent=function(){
+		if(!$(this).hasClass("treeNode") && !$(this).hasClass("treeLeaf")){
+			throw {message:"Parent can be retrieved only from a treeNode or treeLeaf object (i.e. an element of treeNode or treeLeaf class)."};
+		}
+		return $(this).parent().parent().parent().children().first();
 	
 	}
 	
